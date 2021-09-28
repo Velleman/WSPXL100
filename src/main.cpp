@@ -12,17 +12,17 @@ const uint8_t NUM_LEDS = 24;
 #define FRAMES_PER_SECOND 60
 
 CRGBArray<NUM_LEDS> leds;
-#define HORNS_FADE_MODE 0
-#define NOSE_FADE_MODE 1
+#define STRING_MODE 0
+#define TWINKLE1_MODE 1
 #define PRIDE_MODE 2
 #define DEMO_MODE 3
-#define TWINKLE_MODE 4
+#define TWINKLE2_MODE 4
 #define PATTERN1_MODE 5
 #define PATTERN2_MODE 6
 #define PATTERN3_MODE 7
 void btn_pressed();
-void horns_fade(uint8_t speed);
-void nose_fade(uint8_t speed);
+void string_animation(uint8_t speed);
+void twinkle1(uint8_t speed);
 void pride();
 void demo();
 void nextPattern();
@@ -33,7 +33,7 @@ void confetti();
 void sinelon();
 void bpm();
 void juggle();
-void twinkle();
+void twinkle2();
 void pattern1(uint16_t speed);
 void pattern2(uint16_t speed);
 void pattern3(uint16_t speed);
@@ -43,18 +43,18 @@ uint8_t attackDecayWave8(uint8_t i);
 CRGB computeOneTwinkle(uint32_t ms, uint8_t salt);
 void drawTwinkles(CRGBSet &L);
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
-uint8_t currentMode = PATTERN1_MODE;
-uint8_t previousMode = PATTERN1_MODE;
+uint8_t currentMode = STRING_MODE;
+uint8_t previousMode = STRING_MODE;
 bool btnPressed = false;
 // Overall twinkle speed.
 // 0 (VERY slow) to 8 (VERY fast).
 // 4, 5, and 6 are recommended, default is 4.
-#define TWINKLE_SPEED 4
+#define TWINKLE_SPEED 5
 
 // Overall twinkle density.
 // 0 (NONE lit) to 8 (ALL lit at once).
 // Default is 5.
-#define TWINKLE_DENSITY 5
+#define TWINKLE_DENSITY 1
 
 // How often to change color palettes.
 #define SECONDS_PER_PALETTE 30
@@ -79,7 +79,93 @@ CRGB gBackgroundColor = CRGB::Black;
 // fade out slighted 'reddened', similar to how
 // incandescent bulbs change color as they get dim down.
 #define COOL_LIKE_INCANDESCENT 1
+// A mostly red palette with green accents and white trim.
+// "CRGB::Gray" is used as white to keep the brightness more uniform.
+const TProgmemRGBPalette16 RedGreenWhite_p FL_PROGMEM =
+    {CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red,
+     CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red,
+     CRGB::Red, CRGB::Red, CRGB::Gray, CRGB::Gray,
+     CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green};
 
+// A mostly (dark) green palette with red berries.
+#define Holly_Green 0x00580c
+#define Holly_Red 0xB00402
+const TProgmemRGBPalette16 Holly_p FL_PROGMEM =
+    {Holly_Green, Holly_Green, Holly_Green, Holly_Green,
+     Holly_Green, Holly_Green, Holly_Green, Holly_Green,
+     Holly_Green, Holly_Green, Holly_Green, Holly_Green,
+     Holly_Green, Holly_Green, Holly_Green, Holly_Red};
+
+// A red and white striped palette
+// "CRGB::Gray" is used as white to keep the brightness more uniform.
+const TProgmemRGBPalette16 RedWhite_p FL_PROGMEM =
+    {CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red,
+     CRGB::Gray, CRGB::Gray, CRGB::Gray, CRGB::Gray,
+     CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red,
+     CRGB::Gray, CRGB::Gray, CRGB::Gray, CRGB::Gray};
+
+// A mostly blue palette with white accents.
+// "CRGB::Gray" is used as white to keep the brightness more uniform.
+const TProgmemRGBPalette16 BlueWhite_p FL_PROGMEM =
+    {CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::Blue,
+     CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::Blue,
+     CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::Blue,
+     CRGB::Blue, CRGB::Gray, CRGB::Gray, CRGB::Gray};
+
+// A pure "fairy light" palette with some brightness variations
+#define HALFFAIRY ((CRGB::FairyLight & 0xFEFEFE) / 2)
+#define QUARTERFAIRY ((CRGB::FairyLight & 0xFCFCFC) / 4)
+const TProgmemRGBPalette16 FairyLight_p FL_PROGMEM =
+    {CRGB::FairyLight, CRGB::FairyLight, CRGB::FairyLight, CRGB::FairyLight,
+     HALFFAIRY, HALFFAIRY, CRGB::FairyLight, CRGB::FairyLight,
+     QUARTERFAIRY, QUARTERFAIRY, CRGB::FairyLight, CRGB::FairyLight,
+     CRGB::FairyLight, CRGB::FairyLight, CRGB::FairyLight, CRGB::FairyLight};
+
+// A palette of soft snowflakes with the occasional bright one
+const TProgmemRGBPalette16 Snow_p FL_PROGMEM =
+    {0x304048, 0x304048, 0x304048, 0x304048,
+     0x304048, 0x304048, 0x304048, 0x304048,
+     0x304048, 0x304048, 0x304048, 0x304048,
+     0x304048, 0x304048, 0x304048, 0xE0F0FF};
+
+// A palette reminiscent of large 'old-school' C9-size tree lights
+// in the five classic colors: red, orange, green, blue, and white.
+#define C9_Red 0xB80400
+#define C9_Orange 0x902C02
+#define C9_Green 0x046002
+#define C9_Blue 0x070758
+#define C9_White 0x606820
+const TProgmemRGBPalette16 RetroC9_p FL_PROGMEM =
+    {C9_Red, C9_Orange, C9_Red, C9_Orange,
+     C9_Orange, C9_Red, C9_Orange, C9_Red,
+     C9_Green, C9_Green, C9_Green, C9_Green,
+     C9_Blue, C9_Blue, C9_Blue,
+     C9_White};
+
+// A cold, icy pale blue palette
+#define Ice_Blue1 0x0C1040
+#define Ice_Blue2 0x182080
+#define Ice_Blue3 0x5080C0
+const TProgmemRGBPalette16 Ice_p FL_PROGMEM =
+    {
+        Ice_Blue1, Ice_Blue1, Ice_Blue1, Ice_Blue1,
+        Ice_Blue1, Ice_Blue1, Ice_Blue1, Ice_Blue1,
+        Ice_Blue1, Ice_Blue1, Ice_Blue1, Ice_Blue1,
+        Ice_Blue2, Ice_Blue2, Ice_Blue2, Ice_Blue3};
+
+// Add or remove palette names from this list to control which color
+// palettes are used, and in what order.
+const TProgmemRGBPalette16 *ActivePaletteList[] = {
+    &RetroC9_p,
+    &BlueWhite_p,
+    &RainbowColors_p,
+    &FairyLight_p,
+    &RedGreenWhite_p,
+    &PartyColors_p,
+    &RedWhite_p,
+    &Snow_p,
+    &Holly_p,
+    &Ice_p};
 CRGBPalette16 gCurrentPalette;
 CRGBPalette16 gTargetPalette;
 // List of patterns to cycle through.  Each is defined as a separate function below.
@@ -91,39 +177,43 @@ uint8_t gHue = 0;                  // rotating "base color" used by many of the 
 void setup()
 {
   FastLED.addLeds<WS2812B, 2>(leds, NUM_LEDS);
+  FastLED.setMaxPowerInVoltsAndMilliamps(5, 500);
   //FastLED.addLeds<WS2812B, 3>(leds, NUM_LEDS);
   attachInterrupt(digitalPinToInterrupt(4), btn_pressed, FALLING);
   u8g2.begin();
   u8g2.setFont(u8g2_font_profont17_tf); // choose a suitable font
   u8g2.clearBuffer();
-    String s = "Merry X-Mas!";
-    //s += currentMode;
-    u8g2.drawStr(0, 40, s.c_str());
-    u8g2.sendBuffer(); // transfer internal memory to the display
-    previousMode = currentMode;
+  String s = "Merry X-Mas!";
+  //s += currentMode;
+  u8g2.drawStr(0, 40, s.c_str());
+  u8g2.sendBuffer(); // transfer internal memory to the display
+  previousMode = currentMode;
 }
 void loop()
 {
+  if (currentMode != previousMode)
+  {
+    FastLED.clear();
+  }
   switch (currentMode)
   {
-  case HORNS_FADE_MODE:
-    horns_fade(25);
+  case STRING_MODE:
+    string_animation(100);
     break;
-  case NOSE_FADE_MODE:
-    nose_fade(10);
+  case TWINKLE1_MODE:
+    twinkle1(10);
     break;
   case PRIDE_MODE:
     pride();
-    FastLED.show();
     break;
   case DEMO_MODE:
     demo();
     break;
-  case TWINKLE_MODE:
-    twinkle();
+  case TWINKLE2_MODE:
+    twinkle2();
     break;
   case PATTERN1_MODE:
-    pattern1(300);
+    pattern1(500); //every half a second
     break;
   case PATTERN2_MODE:
     pattern2(50);
@@ -132,7 +222,7 @@ void loop()
     pattern3(300);
     break;
   default:
-    currentMode = HORNS_FADE_MODE;
+    currentMode = STRING_MODE;
   }
   if (currentMode != previousMode)
   {
@@ -142,185 +232,84 @@ void loop()
     u8g2.drawStr(0, 40, s.c_str());
     u8g2.sendBuffer(); // transfer internal memory to the display
     previousMode = currentMode;
+    FastLED.clear();
   }
 }
 
 void pattern1(uint16_t speed)
 {
-  FastLED.clear();
-  FastLED.show();
-  delay(speed);
-  //1
-  leds[6] = CRGB(255, 255, 255);
-  leds[7] = CRGB(255, 255, 255);
-  leds[8] = CRGB(255, 255, 255);
-  FastLED.show();
-  if (btnPressed)
+  static int streamer = 0;
+  EVERY_N_MILLIS(speed)
   {
-    btnPressed = false;
-    return;
+    switch (streamer)
+    {
+    case 0:
+      leds[0] = CRGB::White;
+      break;
+    case 1:
+      leds[1] = CRGB::White;
+      leds[2] = CRGB::White;
+      leds[3] = CRGB::White;
+      break;
+    case 2:
+      for (int i = 4; i < 10; i++)
+      {
+        leds[i] = CRGB::White;
+      }
+      break;
+    case 3:
+      for (int i = 10; i < 15; i++)
+      {
+        leds[i] = CRGB::White;
+      }
+      break;
+    case 4:
+      for (int i = 15; i < 20; i++)
+      {
+        leds[i] = CRGB::White;
+      }
+      break;
+    case 5:
+      leds[20] = CRGB::White;
+      break;
+    case 6:
+      leds[21] = CRGB::White;
+      break;
+    case 7:
+      leds[22] = CRGB::White;
+      break;
+    case 8:
+      leds[23] = CRGB::White;
+      break;
+    case 9:
+      FastLED.clear();
+    }
+    FastLED.show();
+    streamer++;
+    if (streamer == 10)
+    {
+      streamer = 0;
+    }
   }
-  delay(speed);
-
-  //2
-  leds[5] = CRGB(255, 255, 255);
-  leds[9] = CRGB(255, 255, 255);
-  FastLED.show();
-  if (btnPressed)
-  {
-    btnPressed = false;
-    return;
-  }
-  delay(speed);
-  //3
-  leds[0] = CRGB(255, 255, 255);
-  leds[4] = CRGB(255, 255, 255);
-  leds[10] = CRGB(255, 255, 255);
-  FastLED.show();
-  if (btnPressed)
-  {
-    btnPressed = false;
-    return;
-  }
-  delay(speed);
-  //4
-  leds[3] = CRGB(255, 255, 255);
-  leds[11] = CRGB(255, 255, 255);
-  FastLED.show();
-  if (btnPressed)
-  {
-    btnPressed = false;
-    return;
-  }
-  delay(speed);
-  //5
-  leds[1] = CRGB(255, 255, 255);
-  leds[12] = CRGB(255, 255, 255);
-  FastLED.show();
-  if (btnPressed)
-  {
-    btnPressed = false;
-    return;
-  }
-  delay(speed);
-  //6
-  leds[2] = CRGB(255, 255, 255);
-  leds[13] = CRGB(255, 255, 255);
-  FastLED.show();
-  if (btnPressed)
-  {
-    btnPressed = false;
-    return;
-  }
-  delay(speed);
-  //7
-  leds[18] = CRGB(255, 255, 255);
-  leds[19] = CRGB(255, 255, 255);
-  FastLED.show();
-  if (btnPressed)
-  {
-    btnPressed = false;
-    return;
-  }
-  delay(speed);
-  //8
-  leds[16] = CRGB(255, 255, 255);
-  leds[21] = CRGB(255, 255, 255);
-  FastLED.show();
-  if (btnPressed)
-  {
-    btnPressed = false;
-    return;
-  }
-  delay(speed);
-  //9
-  leds[17] = CRGB(255, 255, 255);
-  leds[20] = CRGB(255, 255, 255);
-  FastLED.show();
-  if (btnPressed)
-  {
-    btnPressed = false;
-    return;
-  }
-  delay(speed);
-  //10
-  leds[15] = CRGB(255, 255, 255);
-  leds[22] = CRGB(255, 255, 255);
-  FastLED.show();
-  if (btnPressed)
-  {
-    btnPressed = false;
-    return;
-  }
-  delay(speed);
-  //11
-  leds[14] = CRGB(255, 255, 255);
-  leds[23] = CRGB(255, 255, 255);
-  FastLED.show();
-  if (btnPressed)
-  {
-    btnPressed = false;
-    return;
-  }
-  delay(speed);
 }
 
 void pattern2(uint16_t speed)
 {
-  uint8_t map[24] = {6, 5, 4, 3, 2, 1, 16, 15, 14, 17, 18, 19, 20, 23, 22, 21, 12, 13, 11, 10, 9, 8, 7, 0};
-  FastLED.clear();
-  FastLED.show();
-  delay(speed);
-  for (int i = 0; i < 24; i++)
+  uint8_t map[24] = {17,18,16,19,15,20,9,8,13,14,7,21,12,6,11,5,10,4,22,3,2,23,1,0};
+  static uint8_t count = 0;
+  static byte hue = HUE_RED;
+  EVERY_N_MILLIS(speed)
   {
-    leds[map[i]] = CRGB(255, 255, 255);
+    leds[map[count]].setHue(hue);
+    hue++;
     FastLED.show();
-    delay(speed);
+    count++;
+    if(count == 24)
+    {
+      FastLED.clear();
+      count = 0;
+    }
   }
-
-  /*
-  FastLED.clear();
-  FastLED.show();
-  for(uint8_t i = 6;i>=1;i--)
-  {
-    leds[i] = CRGB(255,255,255);
-    FastLED.show();
-    delay(speed);
-  }
-  for(uint8_t i = 16;i>=14;i--)
-  {
-    leds[i] = CRGB(255,255,255);
-    FastLED.show();
-    delay(speed);
-  }
-  for(uint8_t i = 17;i<21;i++)
-  {
-    leds[i] = CRGB(255,255,255);
-    FastLED.show();
-    delay(speed);
-  }
-  for(uint8_t i = 23;i>20;i--)
-  {
-    leds[i] = CRGB(255,255,255);
-    FastLED.show();
-    delay(speed);
-  }
-  leds[12] = CRGB(255,255,255);
-  FastLED.show();
-  delay(speed);
-  leds[13] = CRGB(255,255,255);
-  FastLED.show();
-  delay(speed);
-  for(uint8_t i = 11;i>=7;i--)
-  {
-    leds[i] = CRGB(255,255,255);
-    FastLED.show();
-    delay(speed);
-  }
-  leds[0] = CRGB(255,255,255);
-  FastLED.show();
-  delay(speed);
-*/
 }
 
 void pattern3(uint16_t speed)
@@ -347,7 +336,7 @@ void pattern3(uint16_t speed)
   delay(300);
 }
 
-void twinkle()
+void twinkle2()
 {
   EVERY_N_SECONDS(SECONDS_PER_PALETTE)
   {
@@ -378,85 +367,53 @@ void demo()
   EVERY_N_SECONDS(3) { nextPattern(); } // change patterns periodically
 }
 
-void horns_fade(uint8_t speed)
+void string_animation(uint8_t speed)
 {
-  FastLED.clear();
+  const byte fadeAmt = 96;
+  const int cometSize = 5;
+  const int deltaHue = 4;
+  static byte hue = HUE_RED;
+  static int iDirection = 1;
+  static int iPos = 0;
+  for(int i=20;i<24;i++)
+  {
+    leds[i] = CRGB::White;
+  }
+  hue += deltaHue;
+  iPos += iDirection;
+
+  if (iPos == (19) || iPos == 0)
+  {
+    iDirection *= -1;
+  }
+
+  for (int i = 0; i < cometSize; i++)
+  {
+    leds[iPos].setHue(hue);
+  }
+
+  for (int i = 0; i < 20; i++)
+  {
+    leds[i] = leds[i].fadeToBlackBy(fadeAmt);
+  }
   FastLED.show();
   delay(speed);
-  for (int i = 0; i < 14; i++)
-  {
-    leds[i] = CRGB(10, 10, 10);
-  }
-  FastLED.show();
-  for (int i = 100; i < 255; i++)
-  {
-    uint8_t brightness = dim8_raw(i);
-    for (uint8_t j = 14; j < 24; j++)
-    {
-      if (btnPressed)
-      {
-        btnPressed = false;
-        return;
-      }
-      leds[j] = CRGB(brightness, brightness, brightness);
-    }
-
-    FastLED.show();
-    delay(speed);
-  }
-  for (int i = 255; i > 100; i--)
-  {
-    uint8_t brightness = dim8_raw(i);
-    for (uint8_t j = 14; j < 24; j++)
-    {
-      if (btnPressed)
-      {
-        btnPressed = false;
-        return;
-      }
-      leds[j] = CRGB(brightness, brightness, brightness);
-    }
-    FastLED.show();
-    delay(speed);
-  }
 }
 
-void nose_fade(uint8_t speed)
+void twinkle1(uint8_t speed)
 {
-  FastLED.clear();
+  drawTwinkles(leds);
   FastLED.show();
-  for (int i = 50; i < 255; i++)
-  {
-    uint8_t brightness = dim8_raw(i);
-
-    leds[0] = CRGB(brightness, 0, 0);
-    FastLED.show();
-    if (btnPressed)
-    {
-      btnPressed = false;
-      return;
-    }
-    delay(speed);
-  }
-  for (int i = 255; i > 50; i--)
-  {
-    uint8_t brightness = dim8_raw(i);
-    leds[0] = CRGB(brightness, 0, 0);
-    FastLED.show();
-    if (btnPressed)
-    {
-      btnPressed = false;
-      return;
-    }
-    delay(speed);
-  }
 }
 void btn_pressed()
 {
+  if (currentMode == 0)
+    gCurrentPalette = Snow_p;
   if (currentMode == 3)
     chooseNextColorPalette(gTargetPalette);
   currentMode++;
   btnPressed = true;
+  FastLED.clear();
 }
 
 // This function draws rainbows with an ever-changing,
@@ -501,6 +458,7 @@ void pride()
 
     nblend(leds[pixelnumber], newcolor, 64);
   }
+  FastLED.show();
 }
 
 void nextPattern()
@@ -729,94 +687,6 @@ void coolLikeIncandescent(CRGB &c, uint8_t phase)
   c.g = qsub8(c.g, cooling);
   c.b = qsub8(c.b, cooling * 2);
 }
-
-// A mostly red palette with green accents and white trim.
-// "CRGB::Gray" is used as white to keep the brightness more uniform.
-const TProgmemRGBPalette16 RedGreenWhite_p FL_PROGMEM =
-    {CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red,
-     CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red,
-     CRGB::Red, CRGB::Red, CRGB::Gray, CRGB::Gray,
-     CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green};
-
-// A mostly (dark) green palette with red berries.
-#define Holly_Green 0x00580c
-#define Holly_Red 0xB00402
-const TProgmemRGBPalette16 Holly_p FL_PROGMEM =
-    {Holly_Green, Holly_Green, Holly_Green, Holly_Green,
-     Holly_Green, Holly_Green, Holly_Green, Holly_Green,
-     Holly_Green, Holly_Green, Holly_Green, Holly_Green,
-     Holly_Green, Holly_Green, Holly_Green, Holly_Red};
-
-// A red and white striped palette
-// "CRGB::Gray" is used as white to keep the brightness more uniform.
-const TProgmemRGBPalette16 RedWhite_p FL_PROGMEM =
-    {CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red,
-     CRGB::Gray, CRGB::Gray, CRGB::Gray, CRGB::Gray,
-     CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red,
-     CRGB::Gray, CRGB::Gray, CRGB::Gray, CRGB::Gray};
-
-// A mostly blue palette with white accents.
-// "CRGB::Gray" is used as white to keep the brightness more uniform.
-const TProgmemRGBPalette16 BlueWhite_p FL_PROGMEM =
-    {CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::Blue,
-     CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::Blue,
-     CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::Blue,
-     CRGB::Blue, CRGB::Gray, CRGB::Gray, CRGB::Gray};
-
-// A pure "fairy light" palette with some brightness variations
-#define HALFFAIRY ((CRGB::FairyLight & 0xFEFEFE) / 2)
-#define QUARTERFAIRY ((CRGB::FairyLight & 0xFCFCFC) / 4)
-const TProgmemRGBPalette16 FairyLight_p FL_PROGMEM =
-    {CRGB::FairyLight, CRGB::FairyLight, CRGB::FairyLight, CRGB::FairyLight,
-     HALFFAIRY, HALFFAIRY, CRGB::FairyLight, CRGB::FairyLight,
-     QUARTERFAIRY, QUARTERFAIRY, CRGB::FairyLight, CRGB::FairyLight,
-     CRGB::FairyLight, CRGB::FairyLight, CRGB::FairyLight, CRGB::FairyLight};
-
-// A palette of soft snowflakes with the occasional bright one
-const TProgmemRGBPalette16 Snow_p FL_PROGMEM =
-    {0x304048, 0x304048, 0x304048, 0x304048,
-     0x304048, 0x304048, 0x304048, 0x304048,
-     0x304048, 0x304048, 0x304048, 0x304048,
-     0x304048, 0x304048, 0x304048, 0xE0F0FF};
-
-// A palette reminiscent of large 'old-school' C9-size tree lights
-// in the five classic colors: red, orange, green, blue, and white.
-#define C9_Red 0xB80400
-#define C9_Orange 0x902C02
-#define C9_Green 0x046002
-#define C9_Blue 0x070758
-#define C9_White 0x606820
-const TProgmemRGBPalette16 RetroC9_p FL_PROGMEM =
-    {C9_Red, C9_Orange, C9_Red, C9_Orange,
-     C9_Orange, C9_Red, C9_Orange, C9_Red,
-     C9_Green, C9_Green, C9_Green, C9_Green,
-     C9_Blue, C9_Blue, C9_Blue,
-     C9_White};
-
-// A cold, icy pale blue palette
-#define Ice_Blue1 0x0C1040
-#define Ice_Blue2 0x182080
-#define Ice_Blue3 0x5080C0
-const TProgmemRGBPalette16 Ice_p FL_PROGMEM =
-    {
-        Ice_Blue1, Ice_Blue1, Ice_Blue1, Ice_Blue1,
-        Ice_Blue1, Ice_Blue1, Ice_Blue1, Ice_Blue1,
-        Ice_Blue1, Ice_Blue1, Ice_Blue1, Ice_Blue1,
-        Ice_Blue2, Ice_Blue2, Ice_Blue2, Ice_Blue3};
-
-// Add or remove palette names from this list to control which color
-// palettes are used, and in what order.
-const TProgmemRGBPalette16 *ActivePaletteList[] = {
-    &RetroC9_p,
-    &BlueWhite_p,
-    &RainbowColors_p,
-    &FairyLight_p,
-    &RedGreenWhite_p,
-    &PartyColors_p,
-    &RedWhite_p,
-    &Snow_p,
-    &Holly_p,
-    &Ice_p};
 
 // Advance to the next color palette in the list (above).
 void chooseNextColorPalette(CRGBPalette16 &pal)
