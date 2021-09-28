@@ -306,7 +306,7 @@ void pattern2(uint16_t speed)
     count++;
     if(count == 24)
     {
-      FastLED.clear();
+      //FastLED.clear();
       count = 0;
     }
   }
